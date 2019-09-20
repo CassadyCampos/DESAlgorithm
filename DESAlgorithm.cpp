@@ -64,17 +64,15 @@ const string hex_string_to_binary_string(const string hexString);
 const string removeParityBits(string binaryString);
 const string permutedChoiceOne(string originalBinaryKey);
 
+
 int main()
 {
-	string plainText = "0x2345ABCDEF";
+	string plainText = "0123456789ABCDEF";
 	string key = "133457799BBCDFF1";
 	string keyInBinary = hex_string_to_binary_string(key);
 
-	std::cout << key << std::endl;
-	std::cout << key.length() << std::endl;
-
 	std::cout << keyInBinary << std::endl;
-	std::cout << keyInBinary.length() << std::endl;
+	string permutedKey = permutedChoiceOne(keyInBinary);
 
 	return 0;
 }
@@ -110,10 +108,18 @@ const string hex_string_to_binary_string(const string hexString) {
 	
 	//Remove parity bits
 	//return removeParityBits(result);
+	return result;
 };
 
 const string permutedChoiceOne(string originalBinaryKey) {
+	string permutedBinaryKey;
 
+	for (int pos : PERMUTED_CHOICE_1) {
+		permutedBinaryKey += originalBinaryKey[pos - 1];
+	};
+
+	std::cout << permutedBinaryKey << std::endl;
+	return permutedBinaryKey;
 };
 
 const string removeParityBits(string binaryString) {
