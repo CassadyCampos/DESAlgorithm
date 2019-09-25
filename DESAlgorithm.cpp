@@ -2,14 +2,12 @@
 //
 
 #include <iostream>
-#include <sstream>
-#include <bitset>
 #include <string>
-#include <set>
+#include <vector>
 
 using namespace std;
 
-const int INITIAL_PERMUTATION [64] = {
+const int INITIAL_PERMUTATION[64] = {
 	58, 50, 42, 34, 26, 18, 10, 2,
 	60, 52, 44, 36, 28, 20, 12, 4,
 	62, 54, 46, 38, 30, 22, 14, 6,
@@ -51,7 +49,7 @@ const int PERMUTED_CHOICE_2[48] = {
 	34, 53, 46, 42, 50, 36, 29, 32
 };
 
-const int ONE_BIT_SHIFT_ROUNDS [4] = {
+const int ONE_BIT_SHIFT_ROUNDS[4] = {
 	1, 2, 9, 16
 };
 
@@ -59,10 +57,17 @@ const int TWO_BIT_SHIFT_ROUNDS[12] = {
 	3, 4, 5, 6, 7, 8, 10 ,11, 12, 13, 14, 15
 };
 
+class SubKey { 
+    public:
+    string Ci;
+    string Di;
+};
+
 const string hex_char_to_binary(char c);
 const string hex_string_to_binary_string(const string hexString);
 const string removeParityBits(string binaryString);
 const string permutedChoiceOne(string originalBinaryKey);
+vector<SubKey> subKeys;
 
 
 int main()
@@ -71,9 +76,8 @@ int main()
 	string key = "133457799BBCDFF1";
 	string keyInBinary = hex_string_to_binary_string(key);
 
-	std::cout << keyInBinary << std::endl;
 	string permutedKey = permutedChoiceOne(keyInBinary);
-
+	cout << subKeys[0].Ci << endl << subKeys[0].Di << endl;
 	return 0;
 }
 
@@ -118,7 +122,14 @@ const string permutedChoiceOne(string originalBinaryKey) {
 		permutedBinaryKey += originalBinaryKey[pos - 1];
 	};
 
-	std::cout << permutedBinaryKey << std::endl;
+	SubKey k1;
+	// k1.Ci = "test";
+	// k1.Di = "test2";
+	k1.Ci = permutedBinaryKey.substr(0, permutedBinaryKey.length()/2);
+	k1.Di = permutedBinaryKey.substr(permutedBinaryKey.length()/2);
+	
+	subKeys.push_back(k1);
+
 	return permutedBinaryKey;
 };
 
@@ -133,6 +144,7 @@ const string removeParityBits(string binaryString) {
 	binaryString.erase(binaryString.begin() + 7);
 	return binaryString;
 };
+
 
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
