@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -12,7 +13,7 @@ const int INITIAL_PERMUTATION[64] = {
 	60, 52, 44, 36, 28, 20, 12, 4,
 	62, 54, 46, 38, 30, 22, 14, 6,
 	64, 56, 48, 40, 32, 24, 16, 8,
-	67, 49, 41, 33, 25, 17, 9, 1,
+	57, 49, 41, 33, 25, 17, 9, 1,
 	59, 51, 43, 35, 27, 19, 11, 3,
 	61, 53, 45, 37, 29, 21, 13, 5,
 	63, 55, 47, 39, 31, 23, 15, 7
@@ -53,31 +54,39 @@ const int ONE_BIT_SHIFT_ROUNDS[4] = {
 	1, 2, 9, 16
 };
 
-const int TWO_BIT_SHIFT_ROUNDS[12] = {
-	3, 4, 5, 6, 7, 8, 10 ,11, 12, 13, 14, 15
-};
-
 class SubKey { 
     public:
-    string Ci;
-    string Di;
+    string C;
+    string D;
+	string PC2Key;
 };
 
 const string hex_char_to_binary(char c);
 const string hex_string_to_binary_string(const string hexString);
-const string removeParityBits(string binaryString);
 const string permutedChoiceOne(string originalBinaryKey);
+const string permutedChoiceTwo(string key);
 vector<SubKey> subKeys;
+vector<SubKey> generateSubKeys(string permutedBinaryKey);
+
+const string initialPermutation(string originalBinaryText);
 
 
 int main()
 {
+	// plaintext from online
 	string plainText = "0123456789ABCDEF";
 	string key = "133457799BBCDFF1";
 	string keyInBinary = hex_string_to_binary_string(key);
+	string plainTextInBinary = hex_string_to_binary_string(plainText);
 
+
+	string permutedText = initialPermutation(plainTextInBinary);
+	//cout << plainTextInBinary.length() << endl;
+	cout << permutedText << endl;
 	string permutedKey = permutedChoiceOne(keyInBinary);
-	cout << subKeys[0].Ci << endl << subKeys[0].Di << endl;
+	generateSubKeys(permutedKey);
+
+
 	return 0;
 }
 
@@ -109,9 +118,7 @@ const string hex_string_to_binary_string(const string hexString) {
 	for (char c : hexString) {
 		result += hex_char_to_binary(c);
 	};
-	
-	//Remove parity bits
-	//return removeParityBits(result);
+
 	return result;
 };
 
@@ -122,27 +129,69 @@ const string permutedChoiceOne(string originalBinaryKey) {
 		permutedBinaryKey += originalBinaryKey[pos - 1];
 	};
 
-	SubKey k1;
-	// k1.Ci = "test";
-	// k1.Di = "test2";
-	k1.Ci = permutedBinaryKey.substr(0, permutedBinaryKey.length()/2);
-	k1.Di = permutedBinaryKey.substr(permutedBinaryKey.length()/2);
-	
-	subKeys.push_back(k1);
-
 	return permutedBinaryKey;
 };
 
-const string removeParityBits(string binaryString) {
-	binaryString.erase(binaryString.begin() + 63);
-	binaryString.erase(binaryString.begin() + 55);
-	binaryString.erase(binaryString.begin() + 47);
-	binaryString.erase(binaryString.begin() + 39);
-	binaryString.erase(binaryString.begin() + 31);
-	binaryString.erase(binaryString.begin() + 23);
-	binaryString.erase(binaryString.begin() + 15);
-	binaryString.erase(binaryString.begin() + 7);
-	return binaryString;
+const string permutedChoiceTwo(string key) {
+	string permutedChoice2BinaryKey;
+
+	for (int pos : PERMUTED_CHOICE_2) {
+		permutedChoice2BinaryKey += key[pos - 1];
+	};
+
+	return permutedChoice2BinaryKey;
+};
+
+const string initialPermutation(string originalBinaryText) {
+	string permutedBinaryText;
+
+	for (int pos : INITIAL_PERMUTATION) {
+		permutedBinaryText += originalBinaryText[pos - 1];
+	};
+
+	return permutedBinaryText;
+};
+
+vector<SubKey> generateSubKeys(string permutedBinaryKey) {
+	// Generate the first subkey C0 and D0
+	SubKey k1;
+	k1.C = permutedBinaryKey.substr(0, permutedBinaryKey.length() / 2);
+	k1.D = permutedBinaryKey.substr(permutedBinaryKey.length() / 2);
+	/*k1.CD = permutedBinaryKey;*/
+	subKeys.push_back(k1);
+
+	// Generate subsequent keys using C0 and D0
+	for (int i = 1; i < 17; i++) {
+		SubKey k;
+		string preShiftC = subKeys[i - 1].C;
+		string preShiftD = subKeys[i - 1].D;
+		string CD;
+
+		if (*find(begin(ONE_BIT_SHIFT_ROUNDS), end(ONE_BIT_SHIFT_ROUNDS), i) == i) {
+			//cout << "one bit shift round with " << i << endl;
+			k.C = preShiftC.substr(1, preShiftC.length()) + preShiftC[0];
+			k.D = preShiftD.substr(1, preShiftD.length()) + preShiftD[0];
+
+			/*cout << "C" << i << " round: " << k.C << endl
+				<< "D" << i << " round: " << k.D << endl;*/
+		}
+		else {
+			//cout << "two bit shift round with " << i << endl;
+			k.C = preShiftC.substr(2, preShiftC.length()) + preShiftC.substr(0, 2);
+			k.D = preShiftD.substr(2, preShiftD.length()) + preShiftD.substr(0, 2);
+
+			//cout << "C" << i << " round: " << k.C << endl
+			//	<< "D" << i << " round: " << k.D << endl;
+		};
+
+		CD = k.C + k.D;
+		// Apply PC2 on all keys
+		k.PC2Key = permutedChoiceTwo(CD);
+
+		subKeys.push_back(k);
+	};
+
+	return subKeys;
 };
 
 
