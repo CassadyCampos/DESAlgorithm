@@ -268,7 +268,7 @@ void outputResult(string result, bool isEncrypt) {
 
 void DESAlgorithm(string plainText, bool isEncrypt) {
 	// Clear any existing data
-	plainTexts = {};
+	plainTexts.clear();
 
 
 	string plainTextInBinary = hexStringToBinaryString(plainText);
